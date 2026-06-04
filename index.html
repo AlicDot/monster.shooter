@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster Hunt - Clicker Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+            overflow: hidden;
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            border-bottom: 2px solid #333;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        header > div:first-child {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e72);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header > div:last-child {
+            font-size: 16px;
+            font-weight: 700;
+            color: #aaa;
+        }
+
+        header span {
+            color: #ff6b6b;
+            font-weight: 900;
+            margin: 0 8px;
+        }
+
+        #gameArea {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 107, 107, 0.05) 0%, transparent 70%);
+            overflow: hidden;
+        }
+
+        #dot {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            position: absolute;
+            display: none;
+            font-size: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            background: white;
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.4);
+            transition: transform 0.1s ease;
+            border: 3px solid #ff6b6b;
+        }
+
+        #dot:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 45px rgba(255, 107, 107, 0.6);
+        }
+
+        #dot:active {
+            transform: scale(0.95);
+        }
+
+        #startScreen, #gameOver {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            text-align: center;
+        }
+
+        #startScreen h1, #gameOver h1 {
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e72);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+
+        #startScreen p {
+            font-size: 18px;
+            color: #aaa;
+            margin-bottom: 30px;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        #gameOver p {
+            font-size: 24px;
+            color: #ff6b6b;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        button {
+            padding: 14px 40px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e72);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.5);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        .stats {
+            display: flex;
+            gap: 40px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: #ff6b6b;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            header > div:first-child {
+                font-size: 20px;
+            }
+
+            #startScreen h1, #gameOver h1 {
+                font-size: 36px;
+            }
+
+            #dot {
+                width: 70px;
+                height: 70px;
+                font-size: 40px;
+            }
+
+            button {
+                padding: 12px 30px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div>🎮 MONSTER HUNT</div>
+        <div>SCORE: <span id="score">0</span> | BEST: <span id="best">0</span></div>
+    </header>
+
+    <div id="gameArea">
+        <div id="dot">👹</div>
+
+        <div id="startScreen">
+            <h1>MONSTER HUNT</h1>
+            <p>Klicke auf die Monster so schnell wie möglich und erreiche einen neuen Highscore!</p>
+            <button onclick="startGame()">START GAME</button>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Dein Rekord</div>
+                    <div class="stat-value" id="bestScore">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="gameOver" style="display:none;">
+            <h1>GAME OVER</h1>
+            <p>Score: <span id="finalScore" class="stat-value">0</span></p>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Punkte</div>
+                    <div class="stat-value" id="finalScore2">0</div>
+                </div>
+                <div class="stat-item" id="recordBox" style="display: none;">
+                    <div class="stat-label">🏆 NEUER REKORD! 🏆</div>
+                    <div class="stat-value" id="newRecord">0</div>
+                </div>
+            </div>
+            <button onclick="startGame()" style="margin-top: 30px;">NEUES SPIEL</button>
+        </div>
+    </div>
+
+    <script>
+        const dot = document.getElementById("dot");
+        const gameArea = document.getElementById("gameArea");
+        const startScreen = document.getElementById("startScreen");
+        const gameOverScreen = document.getElementById("gameOver");
+
+        const monsters = ["👹", "👺", "👻", "☠️", "😈", "🐉"];
+
+        let score = 0;
+        let best = parseInt(localStorage.getItem("bestScore")) || 0;
+        let moveTime = 1200;
+        let timeout;
+        let running = false;
+
+        // Initialize best score display
+        document.getElementById("best").innerText = best;
+        document.getElementById("bestScore").innerText = best;
+
+        function randomPos() {
+            const maxX = gameArea.clientWidth - 80;
+            const maxY = gameArea.clientHeight - 80;
+
+            if (maxX > 0 && maxY > 0) {
+                dot.style.left = Math.random() * maxX + "px";
+                dot.style.top = Math.random() * maxY + "px";
+            }
+
+            dot.textContent = monsters[Math.floor(Math.random() * monsters.length)];
+        }
+
+        function endGame() {
+            running = false;
+            dot.style.display = "none";
+            clearTimeout(timeout);
+
+            document.getElementById("finalScore2").innerText = score;
+            
+            const isNewRecord = score > best;
+            const recordBox = document.getElementById("recordBox");
+            
+            if (isNewRecord) {
+                best = score;
+                localStorage.setItem("bestScore", best);
+                document.getElementById("best").innerText = best;
+                document.getElementById("newRecord").innerText = best;
+                recordBox.style.display = "flex";
+            } else {
+                recordBox.style.display = "none";
+            }
+
+            gameOverScreen.style.display = "flex";
+        }
+
+        function moveMonster() {
+            if (!running) return;
+
+            randomPos();
+            clearTimeout(timeout);
+            timeout = setTimeout(endGame, moveTime);
+        }
+
+        dot.onclick = () => {
+            if (!running) return;
+
+            clearTimeout(timeout);
+            score++;
+            document.getElementById("score").innerText = score;
+
+            // Increase difficulty every 2 clicks (minimum 400ms)
+            if (score % 2 === 0 && moveTime > 400) {
+                moveTime -= 30;
+            }
+
+            moveMonster();
+        };
+
+        function startGame() {
+            score = 0;
+            moveTime = 1200;
+            running = true;
+
+            document.getElementById("score").innerText = score;
+            gameOverScreen.style.display = "none";
+            startScreen.style.display = "none";
+
+            dot.style.display = "flex";
+
+            moveMonster();
+        }
+
+        // Handle window resize
+        window.addEventListener("resize", () => {
+            if (running) {
+                randomPos();
+            }
+        });
+    </script>
+</body>
+
+</html>
