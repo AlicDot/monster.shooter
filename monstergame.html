@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster Hunt - Clicker Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%);
+            overflow: hidden;
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 48px;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(30px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        header > div:first-child {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        header > div:last-child {
+            display: flex;
+            gap: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 20px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .score-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #94a3b8;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #gameArea {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+            overflow: hidden;
+        }
+
+        .game-object {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            position: absolute;
+            display: none;
+            font-size: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+            transition: all 0.15s ease;
+            border: 2px solid transparent;
+            backdrop-filter: blur(10px);
+        }
+
+        #dot {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
+            cursor: pointer;
+            border: 2px solid rgba(219, 70, 239, 0.5);
+            box-shadow: 0 16px 40px rgba(99, 102, 241, 0.3);
+        }
+
+        #dot:hover {
+            transform: scale(1.12);
+            box-shadow: 0 20px 50px rgba(99, 102, 241, 0.5);
+            border-color: rgba(219, 70, 239, 0.8);
+        }
+
+        #dot:active {
+            transform: scale(0.92);
+        }
+
+        .obstacle {
+            background: linear-gradient(135deg, #64748b, #475569);
+            cursor: not-allowed;
+            border: 2px solid rgba(148, 163, 184, 0.3);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+            opacity: 0.8;
+        }
+
+        .obstacle:hover {
+            transform: scale(1.08);
+            opacity: 0.7;
+        }
+
+        .obstacle:active {
+            transform: scale(0.95);
+        }
+
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease-out;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 16px 40px rgba(99, 102, 241, 0.3);
+            }
+            100% {
+                box-shadow: 0 0 0 25px rgba(99, 102, 241, 0);
+            }
+        }
+
+        #startScreen, #gameOver {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10, 14, 39, 0.99);
+            backdrop-filter: blur(30px);
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        #startScreen h1, #gameOver h1 {
+            font-size: 64px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+
+        #startScreen p {
+            font-size: 18px;
+            color: #cbd5e1;
+            margin-bottom: 48px;
+            max-width: 550px;
+            line-height: 1.8;
+        }
+
+        #gameOver p {
+            font-size: 18px;
+            color: #cbd5e1;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 16px 52px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 50px rgba(99, 102, 241, 0.5);
+            border-color: rgba(219, 70, 239, 0.8);
+        }
+
+        button:active {
+            transform: translateY(-2px);
+        }
+
+        .stats {
+            display: flex;
+            gap: 60px;
+            margin-top: 36px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 28px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 14px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 40px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .record-badge {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+            margin-bottom: 20px;
+            animation: bounce 0.6s ease-out;
+        }
+
+        @keyframes bounce {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .accuracy {
+            margin-top: 24px;
+            padding: 20px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .accuracy-item {
+            font-size: 15px;
+            color: #cbd5e1;
+            margin: 8px 0;
+        }
+
+        .error-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 20px;
+            pointer-events: none;
+            animation: errorFade 0.8s ease-out;
+            z-index: 200;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes errorFade {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 16px;
+                padding: 16px 24px;
+            }
+
+            header > div:first-child {
+                font-size: 28px;
+            }
+
+            header > div:last-child {
+                gap: 20px;
+            }
+
+            #startScreen h1, #gameOver h1 {
+                font-size: 48px;
+            }
+
+            #startScreen p {
+                font-size: 16px;
+            }
+
+            .game-object {
+                width: 75px;
+                height: 75px;
+                font-size: 40px;
+            }
+
+            button {
+                padding: 14px 40px;
+                font-size: 14px;
+            }
+
+            .stats {
+                gap: 40px;
+            }
+
+            .stat-value {
+                font-size: 32px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 12px 16px;
+            }
+
+            header > div:first-child {
+                font-size: 22px;
+            }
+
+            .score-item {
+                padding: 8px 12px;
+            }
+
+            .score-label {
+                font-size: 10px;
+            }
+
+            .score-value {
+                font-size: 18px;
+            }
+
+            #startScreen h1, #gameOver h1 {
+                font-size: 36px;
+            }
+
+            #startScreen p {
+                font-size: 14px;
+            }
+
+            .game-object {
+                width: 70px;
+                height: 70px;
+                font-size: 36px;
+            }
+
+            .stat-value {
+                font-size: 28px;
+            }
+
+            .stat-item {
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div>🎮 MONSTER HUNT</div>
+        <div>
+            <div class="score-item">
+                <div class="score-label">Score</div>
+                <div class="score-value" id="score">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Best</div>
+                <div class="score-value" id="best">0</div>
+            </div>
+        </div>
+    </header>
+
+    <div id="gameArea">
+        <div id="dot" class="game-object">👹</div>
+
+        <div id="startScreen">
+            <h1>MONSTER HUNT</h1>
+            <p>Click on monsters as fast as you can and reach a new high score! Avoid clicking on obstacles or you'll lose points!</p>
+            <button onclick="startGame()">START GAME</button>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Your Record</div>
+                    <div class="stat-value" id="bestScore">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Difficulty</div>
+                    <div class="stat-value" id="difficultyDisplay">Easy</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="gameOver" style="display:none;">
+            <h1>GAME OVER</h1>
+            <div id="recordAlert" class="record-badge" style="display: none;">
+                🏆 NEW RECORD! 🏆
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Final Score</div>
+                    <div class="stat-value" id="finalScore">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Difficulty Level</div>
+                    <div class="stat-value" id="finalDifficulty">Easy</div>
+                </div>
+            </div>
+            <div class="accuracy">
+                <div class="accuracy-item">✓ Correct Clicks: <span id="correctClicks">0</span></div>
+                <div class="accuracy-item">✗ Wrong Clicks: <span id="wrongClicks">0</span></div>
+                <div class="accuracy-item">📊 Accuracy: <span id="accuracy">0</span>%</div>
+            </div>
+            <button onclick="startGame()" style="margin-top: 30px;">NEW GAME</button>
+        </div>
+    </div>
+
+    <script>
+        const dot = document.getElementById("dot");
+        const gameArea = document.getElementById("gameArea");
+        const startScreen = document.getElementById("startScreen");
+        const gameOverScreen = document.getElementById("gameOver");
+
+        const monsters = ["👹", "👺", "👻", "☠️", "😈", "🐉"];
+        const obstacles = ["🧱", "🚫", "⚠️", "🔒", "💥"];
+
+        let score = 0;
+        let best = parseInt(localStorage.getItem("bestScore")) || 0;
+        let moveTime = 1100;
+        let timeout;
+        let running = false;
+        let wrongClicks = 0;
+        let correctClicks = 0;
+        let currentObjectId = 0;
+        let isMonster = true;
+
+        // Initialize best score display
+        document.getElementById("best").innerText = best;
+        document.getElementById("bestScore").innerText = best;
+        updateDifficultyDisplay();
+
+        function getDifficultyLevel() {
+            if (moveTime >= 1000) return "Easy";
+            if (moveTime >= 800) return "Medium";
+            if (moveTime >= 550) return "Hard";
+            if (moveTime >= 350) return "Extreme";
+            return "Insane";
+        }
+
+        function updateDifficultyDisplay() {
+            document.getElementById("difficultyDisplay").innerText = getDifficultyLevel();
+        }
+
+        function randomPos() {
+            const maxX = gameArea.clientWidth - 80;
+            const maxY = gameArea.clientHeight - 80;
+
+            if (maxX > 0 && maxY > 0) {
+                dot.style.left = Math.random() * maxX + "px";
+                dot.style.top = Math.random() * maxY + "px";
+            }
+        }
+
+        function spawnObject() {
+            // Random chance for obstacle (increases with difficulty)
+            const obstacleChance = Math.min(0.25 + (score * 0.015), 0.5);
+            isMonster = Math.random() > obstacleChance;
+
+            if (isMonster) {
+                dot.textContent = monsters[Math.floor(Math.random() * monsters.length)];
+                dot.classList.remove("obstacle");
+            } else {
+                dot.textContent = obstacles[Math.floor(Math.random() * obstacles.length)];
+                dot.classList.add("obstacle");
+            }
+
+            randomPos();
+            dot.style.display = "flex";
+            dot.id = "dot-" + currentObjectId++;
+        }
+
+        function endGame() {
+            running = false;
+            dot.style.display = "none";
+            clearTimeout(timeout);
+
+            document.getElementById("finalScore").innerText = score;
+            document.getElementById("finalDifficulty").innerText = getDifficultyLevel();
+            document.getElementById("correctClicks").innerText = correctClicks;
+            document.getElementById("wrongClicks").innerText = wrongClicks;
+
+            const totalClicks = correctClicks + wrongClicks;
+            const accuracyPercent = totalClicks > 0 ? Math.round((correctClicks / totalClicks) * 100) : 0;
+            document.getElementById("accuracy").innerText = accuracyPercent;
+
+            const isNewRecord = score > best;
+            const recordAlert = document.getElementById("recordAlert");
+
+            if (isNewRecord) {
+                best = score;
+                localStorage.setItem("bestScore", best);
+                document.getElementById("best").innerText = best;
+                recordAlert.style.display = "block";
+            } else {
+                recordAlert.style.display = "none";
+            }
+
+            gameOverScreen.style.display = "flex";
+        }
+
+        function moveObject() {
+            if (!running) return;
+
+            spawnObject();
+            clearTimeout(timeout);
+            timeout = setTimeout(endGame, moveTime);
+        }
+
+        function showErrorFeedback() {
+            const feedback = document.createElement("div");
+            feedback.className = "error-feedback";
+            feedback.textContent = "❌ Wrong Click!";
+            document.body.appendChild(feedback);
+            
+            setTimeout(() => {
+                feedback.remove();
+            }, 800);
+        }
+
+        dot.onclick = (e) => {
+            if (!running) return;
+
+            if (isMonster) {
+                // Correct click
+                dot.classList.add("pulse");
+                setTimeout(() => dot.classList.remove("pulse"), 500);
+                
+                clearTimeout(timeout);
+                score++;
+                correctClicks++;
+                document.getElementById("score").innerText = score;
+
+                // Increase difficulty every 4 clicks (faster progression)
+                if (score % 4 === 0 && moveTime > 250) {
+                    moveTime -= 50;
+                    updateDifficultyDisplay();
+                }
+
+                moveObject();
+            } else {
+                // Wrong click on obstacle - shake and continue
+                dot.classList.add("shake");
+                setTimeout(() => dot.classList.remove("shake"), 300);
+                
+                wrongClicks++;
+                showErrorFeedback();
+                
+                clearTimeout(timeout);
+                moveObject();
+            }
+        };
+
+        function startGame() {
+            score = 0;
+            moveTime = 1100;
+            wrongClicks = 0;
+            correctClicks = 0;
+            currentObjectId = 0;
+            running = true;
+
+            document.getElementById("score").innerText = score;
+            updateDifficultyDisplay();
+            gameOverScreen.style.display = "none";
+            startScreen.style.display = "none";
+
+            moveObject();
+        }
+
+        // Handle window resize
+        window.addEventListener("resize", () => {
+            if (running) {
+                randomPos();
+            }
+        });
+    </script>
+</body>
+
+</html>
